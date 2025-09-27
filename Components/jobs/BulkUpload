@@ -1,0 +1,184 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Upload, FileText, Download, CheckCircle, AlertCircle } from "lucide-react";
+import { UploadFile, ExtractDataFromUploadedFile } from "@/integrations/Core";
+import { Job } from "@/entities/Job";
+
+export default function BulkUpload({ onUploadComplete }) {
+  const [file, setFile] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setError(null);
+      setUploadResult(null);
+    }
+  };
+
+  const processUpload = async () => {
+    if (!file) return;
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      // Upload file
+      const { file_url } = await UploadFile({ file });
+      
+      // Extract job data using the Job schema
+      const result = await ExtractDataFromUploadedFile({
+        file_url,
+        json_schema: {
+          type: "object",
+          properties: {
+            jobs: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  priority: { type: "string", enum: ["critical", "high", "medium", "low"] },
+                  duration: { type: "number" },
+                  machine_type: { type: "string", enum: ["cnc", "assembly", "testing", "packaging"] },
+                  required_skills: { type: "array", items: { type: "string" } },
+                  assigned_worker: { type: "string" },
+                  description: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (result.status === "success" && result.output?.jobs) {
+        // Bulk create jobs
+        const jobsToCreate = result.output.jobs.map(job => ({
+          ...job,
+          status: "queued"
+        }));
+
+        await Job.bulkCreate(jobsToCreate);
+        
+        setUploadResult({
+          success: true,
+          count: jobsToCreate.length,
+          jobs: jobsToCreate
+        });
+        
+        onUploadComplete();
+      } else {
+        throw new Error(result.details || "Failed to extract job data from file");
+      }
+    } catch (err) {
+      setError(err.message || "Upload failed");
+    }
+
+    setIsProcessing(false);
+  };
+
+  const downloadTemplate = () => {
+    const template = `title,priority,duration,machine_type,required_skills,assigned_worker,description
+Motor Housing Production,high,4.5,cnc,"CNC Operation,Quality Control",John Martinez,Precision motor housing for Model X
+Circuit Assembly,critical,6,assembly,"Assembly,Testing",Sarah Chen,Main circuit board assembly and testing
+Quality Inspection,medium,2,testing,"Quality Control,Testing",Mike Johnson,Final quality inspection and certification
+Product Packaging,low,3,packaging,"Packaging",Lisa Park,Final packaging and labeling`;
+
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'jobs_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="w-5 h-5" />
+          Bulk Job Upload
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Input
+            type="file"
+            accept=".csv,.xlsx,.json"
+            onChange={handleFileChange}
+            className="flex-1"
+          />
+          <Button
+            variant="outline"
+            onClick={downloadTemplate}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Template
+          </Button>
+        </div>
+
+        {file && (
+          <div className="p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">{file.name}</span>
+              <span className="text-xs text-gray-500">
+                ({(file.size / 1024).toFixed(1)} KB)
+              </span>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {uploadResult && (
+          <Alert className="border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              Successfully uploaded {uploadResult.count} jobs!
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="flex justify-end gap-3">
+          <Button
+            onClick={processUpload}
+            disabled={!file || isProcessing}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {isProcessing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Jobs
+              </>
+            )}
+          </Button>
+        </div>
+
+        <div className="text-xs text-gray-500 space-y-1">
+          <p>• Supported formats: CSV, Excel, JSON</p>
+          <p>• Download template for proper format</p>
+          <p>• Required fields: title, duration, machine_type</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

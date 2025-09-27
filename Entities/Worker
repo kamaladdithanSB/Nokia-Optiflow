@@ -1,0 +1,53 @@
+{
+  "name": "Worker",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Worker name"
+    },
+    "shift": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "afternoon",
+        "night"
+      ],
+      "description": "Work shift"
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Worker skills and certifications"
+    },
+    "availability": {
+      "type": "string",
+      "enum": [
+        "available",
+        "busy",
+        "absent",
+        "break"
+      ],
+      "default": "available",
+      "description": "Current availability status"
+    },
+    "efficiency_rating": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 85,
+      "description": "Performance efficiency percentage"
+    },
+    "current_job": {
+      "type": "string",
+      "description": "Currently assigned job ID"
+    }
+  },
+  "required": [
+    "name",
+    "shift",
+    "skills"
+  ]
+}

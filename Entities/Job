@@ -1,0 +1,76 @@
+{
+  "name": "Job",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Job description"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "default": "medium",
+      "description": "Job priority level"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Estimated duration in hours"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "in_progress",
+        "completed",
+        "delayed"
+      ],
+      "default": "queued",
+      "description": "Current job status"
+    },
+    "assigned_machine": {
+      "type": "string",
+      "description": "Assigned machine ID"
+    },
+    "assigned_worker": {
+      "type": "string",
+      "description": "Assigned worker ID"
+    },
+    "start_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Scheduled start time"
+    },
+    "end_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Scheduled end time"
+    },
+    "required_skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Skills required for this job"
+    },
+    "machine_type": {
+      "type": "string",
+      "enum": [
+        "cnc",
+        "assembly",
+        "testing",
+        "packaging"
+      ],
+      "description": "Required machine type"
+    }
+  },
+  "required": [
+    "title",
+    "duration",
+    "machine_type"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "name": "Schedule",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Schedule date"
+    },
+    "shift": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "afternoon",
+        "night"
+      ],
+      "description": "Work shift"
+    },
+    "total_jobs": {
+      "type": "number",
+      "description": "Total jobs scheduled"
+    },
+    "completed_jobs": {
+      "type": "number",
+      "default": 0,
+      "description": "Jobs completed"
+    },
+    "utilization_rate": {
+      "type": "number",
+      "description": "Overall resource utilization percentage"
+    },
+    "throughput": {
+      "type": "number",
+      "description": "Jobs completed per hour"
+    },
+    "idle_time": {
+      "type": "number",
+      "description": "Total idle time in hours"
+    },
+    "disruptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Recorded disruptions"
+    }
+  },
+  "required": [
+    "date",
+    "shift"
+  ]
+}

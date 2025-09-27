@@ -1,0 +1,61 @@
+{
+  "name": "Machine",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Machine name/identifier"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "cnc",
+        "assembly",
+        "testing",
+        "packaging"
+      ],
+      "description": "Machine type"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "operational",
+        "maintenance",
+        "breakdown",
+        "idle"
+      ],
+      "default": "operational",
+      "description": "Current machine status"
+    },
+    "capacity": {
+      "type": "number",
+      "description": "Maximum concurrent jobs"
+    },
+    "current_load": {
+      "type": "number",
+      "default": 0,
+      "description": "Current number of assigned jobs"
+    },
+    "efficiency_rating": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 85,
+      "description": "Efficiency percentage"
+    },
+    "last_maintenance": {
+      "type": "string",
+      "format": "date",
+      "description": "Last maintenance date"
+    },
+    "location": {
+      "type": "string",
+      "description": "Physical location in factory"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "capacity"
+  ]
+}

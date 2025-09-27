@@ -1,0 +1,113 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Briefcase, User, Wrench, Hash, Clock, Save } from "lucide-react";
+
+export default function JobDetailsModal({ job, isOpen, onClose, onSave, workers, machines }) {
+  const [editedJob, setEditedJob] = useState(job);
+
+  useEffect(() => {
+    setEditedJob(job);
+  }, [job]);
+
+  if (!job) return null;
+
+  const handleSave = () => {
+    onSave(editedJob);
+    onClose();
+  };
+  
+  const handleInputChange = (field, value) => {
+    setEditedJob(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Briefcase className="w-5 h-5" />
+            Edit Job: {job.title}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="title">Job Title</Label>
+              <Input id="title" value={editedJob.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="duration">Duration (hours)</Label>
+              <Input id="duration" type="number" value={editedJob.duration || ''} onChange={(e) => handleInputChange('duration', parseFloat(e.target.value))} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="priority">Priority</Label>
+              <Select value={editedJob.priority || 'medium'} onValueChange={(v) => handleInputChange('priority', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="critical">Critical</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select value={editedJob.status || 'queued'} onValueChange={(v) => handleInputChange('status', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="queued">Queued</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="delayed">Delayed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="machine">Assigned Machine</Label>
+              <Select value={editedJob.assigned_machine || ''} onValueChange={(v) => handleInputChange('assigned_machine', v)}>
+                <SelectTrigger><SelectValue placeholder="Select machine" /></SelectTrigger>
+                <SelectContent>
+                  {machines.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="worker">Assigned Worker</Label>
+              <Select value={editedJob.assigned_worker || ''} onValueChange={(v) => handleInputChange('assigned_worker', v)}>
+                <SelectTrigger><SelectValue placeholder="Select worker" /></SelectTrigger>
+                <SelectContent>
+                  {workers.map(w => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+            <Save className="w-4 h-4 mr-2" />
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

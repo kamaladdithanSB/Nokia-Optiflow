@@ -1,0 +1,301 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Machine, Worker } from "@/entities/all";
+import { Badge } from "@/components/ui/badge";
+import { Building, Users, Wrench, Plus, Trash2 } from "lucide-react";
+
+export default function CompanyDataset({ onDataUpdate }) {
+  const [machines, setMachines] = useState([]);
+  const [workers, setWorkers] = useState([]);
+  const [showAddWorker, setShowAddWorker] = useState(false);
+  const [showAddMachine, setShowAddMachine] = useState(false);
+  const [newWorker, setNewWorker] = useState({
+    name: '',
+    shift: 'morning',
+    skills: '',
+    efficiency_rating: 85
+  });
+  const [newMachine, setNewMachine] = useState({
+    name: '',
+    type: 'cnc',
+    capacity: 4,
+    efficiency_rating: 85,
+    location: ''
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    const [machinesData, workersData] = await Promise.all([
+      Machine.list(),
+      Worker.list()
+    ]);
+    setMachines(machinesData);
+    setWorkers(workersData);
+  };
+
+  const addWorker = async () => {
+    if (!newWorker.name) return;
+    
+    await Worker.create({
+      ...newWorker,
+      skills: newWorker.skills.split(',').map(s => s.trim()).filter(s => s),
+      availability: 'available'
+    });
+    
+    setNewWorker({ name: '', shift: 'morning', skills: '', efficiency_rating: 85 });
+    setShowAddWorker(false);
+    loadData();
+    onDataUpdate?.();
+  };
+
+  const addMachine = async () => {
+    if (!newMachine.name) return;
+    
+    await Machine.create({
+      ...newMachine,
+      status: 'operational',
+      current_load: 0
+    });
+    
+    setNewMachine({ name: '', type: 'cnc', capacity: 4, efficiency_rating: 85, location: '' });
+    setShowAddMachine(false);
+    loadData();
+    onDataUpdate?.();
+  };
+
+  const deleteWorker = async (workerId) => {
+    await Worker.delete(workerId);
+    loadData();
+    onDataUpdate?.();
+  };
+
+  const deleteMachine = async (machineId) => {
+    await Machine.delete(machineId);
+    loadData();
+    onDataUpdate?.();
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Building className="w-5 h-5" />
+          Company Dataset Management
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="workers">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="workers" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Workers ({workers.length})
+            </TabsTrigger>
+            <TabsTrigger value="machines" className="flex items-center gap-2">
+              <Wrench className="w-4 h-4" />
+              Machines ({machines.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="workers" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold">Employee Directory</h3>
+              <Button
+                size="sm"
+                onClick={() => setShowAddWorker(!showAddWorker)}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Worker
+              </Button>
+            </div>
+
+            {showAddWorker && (
+              <Card className="p-4 bg-green-50">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Name</Label>
+                    <Input
+                      value={newWorker.name}
+                      onChange={(e) => setNewWorker({...newWorker, name: e.target.value})}
+                      placeholder="Employee name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Shift</Label>
+                    <select 
+                      value={newWorker.shift}
+                      onChange={(e) => setNewWorker({...newWorker, shift: e.target.value})}
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value="morning">Morning</option>
+                      <option value="afternoon">Afternoon</option>
+                      <option value="night">Night</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Skills (comma separated)</Label>
+                    <Input
+                      value={newWorker.skills}
+                      onChange={(e) => setNewWorker({...newWorker, skills: e.target.value})}
+                      placeholder="CNC Operation, Quality Control"
+                    />
+                  </div>
+                  <div>
+                    <Label>Efficiency Rating (%)</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={newWorker.efficiency_rating}
+                      onChange={(e) => setNewWorker({...newWorker, efficiency_rating: parseInt(e.target.value)})}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-3">
+                  <Button size="sm" variant="outline" onClick={() => setShowAddWorker(false)}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={addWorker} className="bg-green-600 hover:bg-green-700">
+                    Add Worker
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {workers.map(worker => (
+                <div key={worker.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <div className="font-medium">{worker.name}</div>
+                    <div className="text-sm text-gray-600">
+                      {worker.shift} shift • {worker.efficiency_rating}% efficiency
+                    </div>
+                    <div className="flex gap-1 mt-1">
+                      {worker.skills?.map(skill => (
+                        <Badge key={skill} variant="outline" className="text-xs">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => deleteWorker(worker.id)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="machines" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold">Machine Inventory</h3>
+              <Button
+                size="sm"
+                onClick={() => setShowAddMachine(!showAddMachine)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Machine
+              </Button>
+            </div>
+
+            {showAddMachine && (
+              <Card className="p-4 bg-blue-50">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Machine Name</Label>
+                    <Input
+                      value={newMachine.name}
+                      onChange={(e) => setNewMachine({...newMachine, name: e.target.value})}
+                      placeholder="Machine identifier"
+                    />
+                  </div>
+                  <div>
+                    <Label>Type</Label>
+                    <select 
+                      value={newMachine.type}
+                      onChange={(e) => setNewMachine({...newMachine, type: e.target.value})}
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value="cnc">CNC</option>
+                      <option value="assembly">Assembly</option>
+                      <option value="testing">Testing</option>
+                      <option value="packaging">Packaging</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Capacity</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={newMachine.capacity}
+                      onChange={(e) => setNewMachine({...newMachine, capacity: parseInt(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <Label>Location</Label>
+                    <Input
+                      value={newMachine.location}
+                      onChange={(e) => setNewMachine({...newMachine, location: e.target.value})}
+                      placeholder="Floor A-1"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-3">
+                  <Button size="sm" variant="outline" onClick={() => setShowAddMachine(false)}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={addMachine} className="bg-blue-600 hover:bg-blue-700">
+                    Add Machine
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {machines.map(machine => (
+                <div key={machine.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <div className="font-medium">{machine.name}</div>
+                    <div className="text-sm text-gray-600">
+                      {machine.type} • Capacity: {machine.capacity} • {machine.location}
+                    </div>
+                    <Badge 
+                      className={
+                        machine.status === 'operational' ? 'bg-green-100 text-green-800' :
+                        machine.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }
+                    >
+                      {machine.status}
+                    </Badge>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => deleteMachine(machine.id)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}

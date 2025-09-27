@@ -1,0 +1,139 @@
+import React from 'react';
+import { Droppable, Draggable } from "@hello-pangea/dnd";
+import { Badge } from "@/components/ui/badge";
+import { Clock, User, Wrench, GripVertical } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+
+const statusColors = {
+  queued: "bg-gray-400 border-gray-500",
+  in_progress: "bg-blue-500 border-blue-600",
+  completed: "bg-green-500 border-green-600",
+  delayed: "bg-red-500 border-red-600"
+};
+
+const machineStatusColors = {
+  operational: "bg-green-100 text-green-800",
+  maintenance: "bg-yellow-100 text-yellow-800",
+  breakdown: "bg-red-100 text-red-800",
+  idle: "bg-gray-100 text-gray-800"
+};
+
+const getJobPosition = (job, totalHours = 24) => {
+  if (!job.start_time) {
+    return { display: 'none' };
+  }
+  const startHour = new Date(job.start_time).getUTCHours();
+  const duration = job.duration || 1;
+  const left = (startHour / totalHours) * 100;
+  const width = (duration / totalHours) * 100;
+
+  return { left: `${left}%`, width: `${Math.max(width, 2)}%` };
+};
+
+const TimeAxis = ({ hours }) => (
+  <div className="relative h-8 bg-gray-100 rounded-lg mb-4">
+    <div className="flex justify-between items-center h-full px-4 text-xs font-medium text-gray-600">
+      {Array.from({ length: hours / 4 + 1 }, (_, i) => i * 4).map(hour => (
+        <span key={hour}>{`${hour.toString().padStart(2, '0')}:00`}</span>
+      ))}
+    </div>
+  </div>
+);
+
+const MachineRow = ({ machine, jobs, onJobClick }) => (
+  <Droppable droppableId={machine.id} direction="horizontal">
+    {(provided, snapshot) => (
+      <div className="space-y-2 mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-28 text-sm font-semibold text-gray-800 truncate">
+            {machine.name}
+          </div>
+          <Badge className={`text-xs font-medium ${machineStatusColors[machine.status]}`}>
+            {machine.status}
+          </Badge>
+        </div>
+        <div
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+          className={`relative h-14 rounded-lg border transition-colors ${
+            snapshot.isDraggingOver ? "bg-blue-50 border-blue-400" : "bg-gray-50 border-gray-200"
+          }`}
+        >
+          {jobs.map((job, index) => (
+            <Draggable key={job.id} draggableId={job.id} index={index}>
+              {(provided, snapshot) => (
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      onClick={() => onJobClick(job)}
+                      className={`absolute top-1 bottom-1 ${statusColors[job.status]} border-2 rounded-md px-2 flex items-center gap-1 text-white text-xs font-medium shadow-sm cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200 ${snapshot.isDragging ? "shadow-2xl scale-105" : ""}`}
+                      style={{
+                        ...getJobPosition(job),
+                        ...provided.draggableProps.style,
+                      }}
+                    >
+                      <GripVertical className="w-3 h-3 text-white/50" />
+                      <span className="truncate flex-1">{job.title}</span>
+                    </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold">{job.title}</h4>
+                      <p className="text-sm">Status: <span className="font-medium">{job.status}</span></p>
+                      <p className="text-sm">Duration: <span className="font-medium">{job.duration}h</span></p>
+                      <p className="text-sm">Priority: <span className="font-medium">{job.priority}</span></p>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              )}
+            </Draggable>
+          ))}
+          {provided.placeholder}
+        </div>
+      </div>
+    )}
+  </Droppable>
+);
+
+const Legend = () => (
+  <div className="flex flex-wrap gap-4 mt-4 text-xs">
+    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-blue-500"></div>In Progress</div>
+    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-green-500"></div>Completed</div>
+    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-red-500"></div>Delayed</div>
+    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-gray-400"></div>Queued</div>
+  </div>
+);
+
+export default function InteractiveGanttChart({ jobs, machines, onJobClick }) {
+  const timeSlots = 24;
+
+  return (
+    <div className="col-span-2 shadow-lg border-0 bg-white p-6 rounded-xl">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <Clock className="w-5 h-5" />
+          Production Schedule
+        </h2>
+        <Badge variant="outline">Drag & Drop to Reschedule</Badge>
+      </div>
+
+      <div className="space-y-4">
+        <TimeAxis hours={timeSlots} />
+        <div className="overflow-x-auto">
+          {machines.map(machine => (
+            <MachineRow
+              key={machine.id}
+              machine={machine}
+              jobs={jobs.filter(job => job.assigned_machine === machine.id)}
+              onJobClick={onJobClick}
+            />
+          ))}
+        </div>
+        <Legend />
+      </div>
+    </div>
+  );
+}

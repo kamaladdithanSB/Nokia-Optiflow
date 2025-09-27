@@ -1,0 +1,61 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+
+const alertIcons = {
+  critical: AlertCircle,
+  warning: AlertTriangle, 
+  info: CheckCircle,
+  delay: Clock
+};
+
+const alertColors = {
+  critical: "bg-red-100 text-red-800 border-red-200",
+  warning: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  info: "bg-blue-100 text-blue-800 border-blue-200", 
+  delay: "bg-orange-100 text-orange-800 border-orange-200"
+};
+
+export default function LiveAlerts({ alerts }) {
+  return (
+    <Card className="shadow-lg border-0">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold">Live Alerts</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3 max-h-80 overflow-y-auto">
+          {alerts.length === 0 ? (
+            <div className="text-center py-6 text-gray-500">
+              <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-500" />
+              <p>All systems running smoothly</p>
+            </div>
+          ) : (
+            alerts.map((alert, index) => {
+              const Icon = alertIcons[alert.type];
+              return (
+                <div key={index} className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                  <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                    alert.type === 'critical' ? 'text-red-500' :
+                    alert.type === 'warning' ? 'text-yellow-500' :
+                    alert.type === 'info' ? 'text-blue-500' : 'text-orange-500'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium text-gray-900 text-sm">{alert.title}</h4>
+                      <Badge className={`text-xs ${alertColors[alert.type]}`}>
+                        {alert.type}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">{alert.message}</p>
+                    <p className="text-xs text-gray-500 mt-1">{alert.timestamp}</p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
