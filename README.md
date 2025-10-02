@@ -1,4 +1,5 @@
 # 🚀 Nokia OptiFlow – AI-Powered Adaptive Scheduling and Resource Optimization
+![Nokia OptiFlow Banner](banner.png)
 
 [![Hackathon](https://img.shields.io/badge/Hackathon-Nokia%20Production%20Optimization-blue)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
