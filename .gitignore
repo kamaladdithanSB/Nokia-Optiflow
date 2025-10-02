@@ -1,0 +1,19 @@
+# .gitignore
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+.env.*
+*.egg-info/
+
+# Node
+node_modules/
+build/
+dist/
+
+# Notebook
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
