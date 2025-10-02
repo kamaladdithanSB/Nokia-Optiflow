@@ -115,3 +115,20 @@ See the [LICENSE](LICENSE) file for details.
 - Thanks to mentors, organizers, and **Nokia** for the opportunity  
 - Inspired by the vision of **Industry 4.0 smart manufacturing**  
 
+## 🎥 Demo
+
+Here’s a quick look at **Nokia OptiFlow** in action:
+
+### Dashboard View
+![Dashboard Screenshot](dashboard.png)
+
+### Analytics
+![Gantt Chart Screenshot](analytics.png)
+
+### AI Forecasting
+![KPI Panel Screenshot](forecast.png)
+
+---
+
+📌 *For a live demo, check out:*  
+👉 [Nokia OptiFlow Dashboard](https://nokia-opti-flow-5e11eed5.base44.app/Dashboard)
