@@ -1,0 +1,10 @@
+numpy
+pandas
+prophet
+matplotlib
+streamlit
+fastapi
+uvicorn
+stable-baselines3
+torch
+scikit-learn
